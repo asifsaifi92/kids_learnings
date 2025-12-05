@@ -2,6 +2,8 @@
 
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
+import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
 import 'package:provider/provider.dart';
 import '../provider/colors_provider.dart';
 import 'package:kids/features/colors/presentation/widgets/color_bubble.dart' as cbw;
@@ -27,7 +29,6 @@ class _ColorsPageState extends State<ColorsPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_didInit) {
-      // Schedule load after the first frame to avoid notifyListeners during build/mount.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Provider.of<ColorsProvider>(context, listen: false).load();
       });
@@ -48,20 +49,25 @@ class _ColorsPageState extends State<ColorsPage> {
       _gameActive = true;
       _gameMessage = 'Tap the ${_target!.displayText} color!';
     });
-    // Announce the target
     prov.speak(_target!);
   }
 
-  void _onColorTap(item) {
-    final prov = Provider.of<ColorsProvider>(context, listen: false);
+  void _onColorTap(ColorItem item) {
+    final colorsProvider = Provider.of<ColorsProvider>(context, listen: false);
+    final learningProvider = Provider.of<LearningProvider>(context, listen: false);
+    final challengeProvider = Provider.of<DailyChallengeProvider>(context, listen: false);
     final rewardsProvider = Provider.of<RewardsProvider>(context, listen: false);
-    // Debug log for tap
-    // ignore: avoid_print
-    print('[ColorsPage] tapped id=${item.id} name=${item.name}');
-    prov.speak(item);
+
+    colorsProvider.speak(item);
+
+    if (!learningProvider.completedColors.contains(item.name)) {
+      challengeProvider.updateProgress(ChallengeType.LearnColors);
+    }
+    learningProvider.markColorAsLearned(item.name);
+
     final text = (item.ttsText).trim().isNotEmpty ? item.ttsText : item.displayText;
-    // Show immediate feedback so it's obvious which color was tapped
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Speaking: $text'), duration: const Duration(milliseconds: 700)));
+
     if (_gameActive) {
       if (_target != null && item.id == _target!.id) {
         setState(() {
@@ -85,10 +91,12 @@ class _ColorsPageState extends State<ColorsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final prov = Provider.of<ColorsProvider>(context);
+    final colorsProvider = Provider.of<ColorsProvider>(context);
+    final learningProvider = Provider.of<LearningProvider>(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Colors')),
-      body: prov.isLoading
+      body: colorsProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
@@ -112,10 +120,14 @@ class _ColorsPageState extends State<ColorsPage> {
                     padding: const EdgeInsets.all(16),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    children: prov.items
+                    children: colorsProvider.items
                         .map((c) => GestureDetector(
                               onTap: () => _onColorTap(c),
-                              child: cbw.ColorBubble(label: c.displayText, colorHex: c.colorHex),
+                              child: cbw.ColorBubble(
+                                label: c.displayText,
+                                colorHex: c.colorHex,
+                                isLearned: learningProvider.completedColors.contains(c.name),
+                              ),
                             ))
                         .toList(),
                   ),

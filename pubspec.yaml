@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.0
+  sdk: ">=2.18.0 <3.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -37,14 +37,19 @@ dependencies:
   flutter_tts: ^4.0.2
   get_it: ^7.7.0
   google_fonts: ^6.2.1
-  just_audio: ^0.9.39
-  audio_session: ^0.1.7
-  flutter_svg: ^1.1.6
+  flutter_svg: ^2.0.10
   lottie: ^2.4.0
   equatable: ^2.0.5
   provider: ^6.0.5
   dots_indicator: ^3.0.0
   simple_icons: ^14.6.1
+  shared_preferences: ^2.1.1
+  signature: ^5.4.1
+  flutter_colorpicker: ^1.0.3
+  permission_handler: ^11.3.1
+  gal: ^2.3.2
+  percent_indicator: ^4.2.3
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -72,8 +77,12 @@ flutter:
   assets:
     - assets/icons/home.svg
     - assets/animations/star_pop.json
+    - assets/animations/mascot.json
     - assets/audio/rhymes/
     - assets/images/stories/
+    - assets/images/animals/
+    - assets/sounds/animals/
+    - assets/images/fruits/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,7 +1,19 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:kids/features/animals/presentation/pages/animals_page.dart';
+import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
+import 'package:kids/features/drawing/presentation/pages/drawing_page.dart';
+import 'package:kids/features/fruits/presentation/pages/fruits_page.dart';
+import 'package:kids/features/gk/presentation/pages/gk_page.dart';
+import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
+import 'package:kids/features/mascot/presentation/provider/mascot_provider.dart';
+import 'package:kids/features/mascot/presentation/pages/dressing_room_page.dart';
 import 'package:kids/features/parent_settings/presentation/pages/parent_settings_page.dart';
 import 'package:kids/features/parent_settings/presentation/provider/parent_settings_provider.dart';
+import 'package:kids/features/puzzles/presentation/pages/puzzles_page.dart';
+import 'package:kids/features/quiz/presentation/pages/quiz_page.dart';
+import 'package:kids/features/quiz/presentation/pages/quiz_selection_page.dart';
+import 'package:kids/features/quiz/presentation/provider/quiz_provider.dart';
 import 'package:kids/features/rewards/presentation/provider/rewards_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/learning/presentation/pages/alphabet_page.dart';
@@ -31,10 +43,34 @@ class KidsLearningApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => di.sl<QuizProvider>()),
+        ChangeNotifierProvider(create: (_) {
+          final p = di.sl<DailyChallengeProvider>();
+          p.init();
+          return p;
+        }),
+        ChangeNotifierProvider(create: (_) {
+          final p = di.sl<LearningProvider>();
+          p.init();
+          return p;
+        }),
+        ChangeNotifierProvider(create: (_) {
+          final p = di.sl<MascotProvider>();
+          p.init();
+          return p;
+        }),
         ChangeNotifierProvider(create: (_) => di.sl<ColorsProvider>()),
         ChangeNotifierProvider(create: (_) => di.sl<ShapesProvider>()),
-        ChangeNotifierProvider(create: (_) => di.sl<RhymesProvider>()),
-        ChangeNotifierProvider(create: (_) => di.sl<StoriesProvider>()),
+        ChangeNotifierProvider(create: (_) {
+          final p = di.sl<RhymesProvider>();
+          p.init();
+          return p;
+        }),
+        ChangeNotifierProvider(create: (_) {
+          final p = di.sl<StoriesProvider>();
+          p.init();
+          return p;
+        }),
         ChangeNotifierProvider(create: (_) => di.sl<RewardsProvider>()..load()),
         ChangeNotifierProvider(create: (_) => di.sl<ParentSettingsProvider>()..load()),
       ],
@@ -52,6 +88,14 @@ class KidsLearningApp extends StatelessWidget {
           RhymesPage.routeName: (_) => const RhymesPage(),
           StoriesPage.routeName: (_) => const StoriesPage(),
           ParentSettingsPage.routeName: (_) => const ParentSettingsPage(),
+          DrawingPage.routeName: (_) => const DrawingPage(),
+          DressingRoomPage.routeName: (_) => const DressingRoomPage(),
+          QuizSelectionPage.routeName: (_) => const QuizSelectionPage(),
+          QuizPage.routeName: (_) => const QuizPage(),
+          AnimalsPage.routeName: (_) => const AnimalsPage(),
+          FruitsPage.routeName: (_) => const FruitsPage(),
+          PuzzlesPage.routeName: (_) => const PuzzlesPage(),
+          GKPage.routeName: (_) => const GKPage(),
         },
       ),
     );

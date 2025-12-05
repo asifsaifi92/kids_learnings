@@ -30,6 +30,70 @@ class StoriesLocalDataSourceImpl implements StoriesLocalDataSource {
           StoryPageItem(pageNumber: 4, text: 'He dreamed big and smiled.', imageAsset: 'assets/images/stories/moon4.png'),
         ],
       ),
+      StoryItem(
+        id: 3,
+        title: 'Luna the Little Cloud',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'Luna floated high and watched the world below.'),
+          StoryPageItem(pageNumber: 2, text: 'She learned to make rain to help the flowers.'),
+        ],
+      ),
+      StoryItem(
+        id: 4,
+        title: 'Timmy and the Tiny Seed',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'Timmy planted a tiny seed in his backyard.'),
+          StoryPageItem(pageNumber: 2, text: 'With water and sunshine it grew into a tall tree.'),
+        ],
+      ),
+      StoryItem(
+        id: 5,
+        title: 'The Little Boat',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'A little boat sailed across the calm lake.'),
+          StoryPageItem(pageNumber: 2, text: 'The boat met friendly fish and a playful breeze.'),
+        ],
+      ),
+      StoryItem(
+        id: 6,
+        title: 'Penny and the Paints',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'Penny mixed colors to paint the rainbow.'),
+          StoryPageItem(pageNumber: 2, text: 'Her painting brightened the whole town.'),
+        ],
+      ),
+      StoryItem(
+        id: 7,
+        title: 'Sammy the Snail',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'Sammy moved slowly but saw many wonders.'),
+          StoryPageItem(pageNumber: 2, text: 'He made a new friend under a leaf.'),
+        ],
+      ),
+      StoryItem(
+        id: 8,
+        title: 'The Singing Tree',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'There was a tree that sang in the morning.'),
+          StoryPageItem(pageNumber: 2, text: 'Children gathered to listen and clap.'),
+        ],
+      ),
+      StoryItem(
+        id: 9,
+        title: 'Nora and the Night Lamp',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'Nora kept a little lamp to guide her dreams.'),
+          StoryPageItem(pageNumber: 2, text: 'The lamp glowed warm and kept the dark away.'),
+        ],
+      ),
+      StoryItem(
+        id: 10,
+        title: 'The Curious Kitten',
+        pages: [
+          StoryPageItem(pageNumber: 1, text: 'A curious kitten climbed the tallest chair.'),
+          StoryPageItem(pageNumber: 2, text: 'It discovered a ball of yarn and played all day.'),
+        ],
+      ),
     ];
   }
 }

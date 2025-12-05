@@ -1,10 +1,12 @@
 // lib/features/stories/presentation/pages/story_reader_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import '../../domain/entities/story_item.dart';
 import '../provider/stories_provider.dart';
+import 'package:kids/features/rhymes/presentation/widgets/rhyme_lyrics.dart';
 
 class StoryReaderPage extends StatefulWidget {
   final StoryItem story;
@@ -31,7 +33,7 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final prov = Provider.of<StoriesProvider>(context, listen: false);
+    final prov = Provider.of<StoriesProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -70,7 +72,7 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Color.fromRGBO(0, 0, 0, 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -105,14 +107,24 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
                             flex: 2,
                             child: SingleChildScrollView(
                               padding: const EdgeInsets.all(24.0),
-                              child: Text(
-                                page.text,
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  height: 1.5,
-                                  color: Colors.black87,
-                                ),
-                                textAlign: TextAlign.center,
+                              child: Consumer<StoriesProvider>(
+                                builder: (context, sp, _) {
+                                  return RhymeLyrics(
+                                    text: page.text,
+                                    activeWordIndex: sp.currentWordIndex,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      height: 1.5,
+                                      color: Colors.black87,
+                                    ),
+                                    activeStyle: const TextStyle(
+                                      fontSize: 24,
+                                      height: 1.5,
+                                      color: Colors.pinkAccent,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -137,6 +149,16 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
                 ),
               ),
             ),
+            Consumer<StoriesProvider>(
+              builder: (context, prov, _) {
+                return SwitchListTile.adaptive(
+                  value: prov.replayOnResume,
+                  onChanged: (v) => prov.replayOnResume = v,
+                  title: const Text('Replay last word on resume'),
+                  contentPadding: EdgeInsets.zero,
+                );
+              },
+            ),
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Row(
@@ -153,10 +175,31 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
                   FloatingActionButton(
                     heroTag: 'play',
                     onPressed: () {
-                      prov.speak(widget.story.pages[_currentPage.round()].text);
+                      final currentPageIndex = _currentPage.round();
+                      final pageText = widget.story.pages[currentPageIndex].text;
+                      if (prov.isPlaying) {
+                        if (prov.isPaused) {
+                          prov.resume();
+                        } else {
+                          prov.pause();
+                        }
+                      } else {
+                        prov.playPage(pageText).then((_) {
+                          if (!prov.isPlaying && currentPageIndex == widget.story.pages.length - 1) {
+                            if (!prov.completedStories.contains(widget.story.title)) {
+                                context.read<DailyChallengeProvider>().updateProgress(ChallengeType.ReadStories);
+                            }
+                            prov.markStoryAsCompleted(widget.story);
+                          }
+                        });
+                      }
                     },
                     backgroundColor: Colors.pinkAccent,
-                    child: const Icon(Icons.volume_up, color: Colors.white, size: 30),
+                    child: Icon(
+                      prov.isPlaying ? (prov.isPaused ? Icons.play_arrow : Icons.pause) : Icons.volume_up,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   ),
                   FloatingActionButton(
                     heroTag: 'next',

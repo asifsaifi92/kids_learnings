@@ -5,15 +5,22 @@ import '../../domain/entities/shape_item.dart';
 
 class ShapeTile extends StatelessWidget {
   final ShapeItem shapeItem;
+  final bool isLearned;
 
-  const ShapeTile({super.key, required this.shapeItem});
+  const ShapeTile({
+    super.key,
+    required this.shapeItem,
+    this.isLearned = false, // Default to not learned
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade200],
+          colors: isLearned
+              ? [Colors.green.shade100, Colors.lightGreen.shade200] // Learned state color
+              : [Colors.white, Colors.grey.shade200], // Default state color
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

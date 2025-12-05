@@ -1,5 +1,8 @@
 // lib/features/learning/presentation/pages/numbers_page.dart
 import 'package:flutter/material.dart';
+import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
+import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/services/text_to_speech_service.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/number_item.dart';
@@ -25,8 +28,19 @@ class _NumbersPageState extends State<NumbersPage> {
     _items = sl<GetNumberItems>()();
   }
 
-  void _onTileTap(int index, String ttsText) {
-    _tts.speak(ttsText);
+  void _onTileTap(BuildContext context, int index, NumberItem item) {
+    final learningProvider = Provider.of<LearningProvider>(context, listen: false);
+    final challengeProvider = Provider.of<DailyChallengeProvider>(context, listen: false);
+
+    _tts.speak(item.ttsText);
+
+    // Only update challenge progress if the number is being learned for the first time
+    if (!learningProvider.completedNumbers.contains(item.value.toString())) {
+      challengeProvider.updateProgress(ChallengeType.LearnNumbers);
+    }
+
+    learningProvider.markNumberAsLearned(item.value.toString());
+
     setState(() {
       _tappedIndex = index;
     });
@@ -56,49 +70,56 @@ class _NumbersPageState extends State<NumbersPage> {
       ),
       body: Container(
         color: const Color(0xFFE3F2FD), // Soft light blue
-        child: GridView.builder(
-          padding: const EdgeInsets.all(24),
-          itemCount: _items.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-          ),
-          itemBuilder: (context, index) {
-            final item = _items[index];
-            final isTapped = _tappedIndex == index;
-            final scale = isTapped ? 0.9 : 1.0;
-
-            return AnimatedScale(
-              scale: scale,
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeInOut,
-              child: GestureDetector(
-                onTap: () => _onTileTap(index, item.ttsText),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6FD6FF), Color(0xFF4DA6FF)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 12,
-                        offset: const Offset(4, 6),
-                        color: const Color(0xFF4DA6FF).withOpacity(0.4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      item.value.toString(),
-                      style: Theme.of(context).textTheme.displayMedium,
-                    ),
-                  ),
-                ),
+        child: Consumer<LearningProvider>(
+          builder: (context, learningProvider, child) {
+            return GridView.builder(
+              padding: const EdgeInsets.all(24),
+              itemCount: _items.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
               ),
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                final isTapped = _tappedIndex == index;
+                final isLearned = learningProvider.completedNumbers.contains(item.value.toString());
+                final scale = isTapped ? 0.9 : 1.0;
+
+                return AnimatedScale(
+                  scale: scale,
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeInOut,
+                  child: GestureDetector(
+                    onTap: () => _onTileTap(context, index, item),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isLearned
+                              ? [const Color(0xFF6FD6FF).withOpacity(0.5), const Color(0xFF4DA6FF).withOpacity(0.5)]
+                              : [const Color(0xFF6FD6FF), const Color(0xFF4DA6FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 12,
+                            offset: const Offset(4, 6),
+                            color: const Color(0xFF4DA6FF).withOpacity(0.4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          item.value.toString(),
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),

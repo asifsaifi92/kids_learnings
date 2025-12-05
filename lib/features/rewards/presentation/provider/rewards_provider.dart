@@ -6,12 +6,18 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/reward_state.dart';
 import '../../domain/usecases/get_rewards.dart';
 import '../../domain/usecases/award_star.dart';
+import '../../domain/usecases/spend_star.dart';
 
 class RewardsProvider extends ChangeNotifier {
   final GetRewards getRewards;
   final AwardStar awardStarUseCase;
+  final SpendStar spendStarUseCase;
 
-  RewardsProvider({required this.getRewards, required this.awardStarUseCase});
+  RewardsProvider({
+    required this.getRewards,
+    required this.awardStarUseCase,
+    required this.spendStarUseCase,
+  });
 
   RewardState _rewardState = RewardState(totalStars: 0);
   RewardState get rewardState => _rewardState;
@@ -28,6 +34,12 @@ class RewardsProvider extends ChangeNotifier {
     await awardStarUseCase();
     _rewardState = await getRewards();
     _rewardPopupController.add(null);
+    notifyListeners();
+  }
+
+  Future<void> spendStars(int starsToSpend) async {
+    await spendStarUseCase(starsToSpend);
+    _rewardState = await getRewards();
     notifyListeners();
   }
 

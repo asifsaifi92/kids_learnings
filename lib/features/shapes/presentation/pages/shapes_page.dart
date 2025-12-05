@@ -1,6 +1,8 @@
 // lib/features/shapes/presentation/pages/shapes_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
+import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
 import 'package:provider/provider.dart';
 import '../provider/shapes_provider.dart';
 import '../widgets/shape_tile.dart';
@@ -65,9 +67,18 @@ class _ShapesPageState extends State<ShapesPage> with TickerProviderStateMixin {
   }
 
   void _onShapeTap(ShapeItem item) {
-    final prov = Provider.of<ShapesProvider>(context, listen: false);
+    final shapesProvider = Provider.of<ShapesProvider>(context, listen: false);
+    final learningProvider = Provider.of<LearningProvider>(context, listen: false);
+    final challengeProvider = Provider.of<DailyChallengeProvider>(context, listen: false);
     final rewardsProvider = Provider.of<RewardsProvider>(context, listen: false);
-    prov.speak(item);
+
+    shapesProvider.speak(item);
+
+    if (!learningProvider.completedShapes.contains(item.name)) {
+      challengeProvider.updateProgress(ChallengeType.LearnShapes);
+    }
+    learningProvider.markShapeAsLearned(item.name);
+
     _animationController.forward().then((_) => _animationController.reverse());
     if (_gameActive) {
       if (_target != null && item.id == _target!.id) {
@@ -92,7 +103,9 @@ class _ShapesPageState extends State<ShapesPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final prov = Provider.of<ShapesProvider>(context);
+    final shapesProvider = Provider.of<ShapesProvider>(context);
+    final learningProvider = Provider.of<LearningProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Learn Shapes'),
@@ -106,7 +119,7 @@ class _ShapesPageState extends State<ShapesPage> with TickerProviderStateMixin {
           ),
         ),
       ),
-      body: prov.isLoading
+      body: shapesProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(
               decoration: BoxDecoration(
@@ -145,14 +158,17 @@ class _ShapesPageState extends State<ShapesPage> with TickerProviderStateMixin {
                         crossAxisSpacing: 24.0,
                         mainAxisSpacing: 24.0,
                       ),
-                      itemCount: prov.items.length,
+                      itemCount: shapesProvider.items.length,
                       itemBuilder: (context, index) {
-                        final item = prov.items[index];
+                        final item = shapesProvider.items[index];
                         return GestureDetector(
                           onTap: () => _onShapeTap(item),
                           child: ScaleTransition(
                             scale: _animation,
-                            child: ShapeTile(shapeItem: item),
+                            child: ShapeTile(
+                              shapeItem: item,
+                              isLearned: learningProvider.completedShapes.contains(item.name),
+                            ),
                           ),
                         );
                       },

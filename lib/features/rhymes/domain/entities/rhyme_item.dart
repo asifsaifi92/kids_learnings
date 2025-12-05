@@ -3,15 +3,13 @@
 class RhymeItem {
   final String id;
   final String title;
-  final String durationText;
-  final String assetPath;
-  final String ttsIntro;
+  final String lyrics;
+  final String ttsText;
 
   RhymeItem({
     required this.id,
     required this.title,
-    required this.durationText,
-    required this.assetPath,
-    required this.ttsIntro,
+    required this.lyrics,
+    required this.ttsText,
   });
 }

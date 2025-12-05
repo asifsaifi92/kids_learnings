@@ -18,4 +18,9 @@ class RewardsRepositoryImpl implements RewardsRepository {
   Future<void> awardStar() {
     return localDataSource.awardStar();
   }
+
+  @override
+  Future<void> spendStars(int starsToSpend) {
+    return localDataSource.spendStars(starsToSpend);
+  }
 }

@@ -5,6 +5,7 @@ import '../../domain/entities/reward_state.dart';
 abstract class RewardsLocalDataSource {
   Future<RewardState> getRewards();
   Future<void> awardStar();
+  Future<void> spendStars(int starsToSpend);
 }
 
 class RewardsLocalDataSourceImpl implements RewardsLocalDataSource {
@@ -18,5 +19,13 @@ class RewardsLocalDataSourceImpl implements RewardsLocalDataSource {
   @override
   Future<void> awardStar() async {
     _starCount++;
+  }
+
+  @override
+  Future<void> spendStars(int starsToSpend) async {
+    _starCount -= starsToSpend;
+    if (_starCount < 0) {
+      _starCount = 0;
+    }
   }
 }

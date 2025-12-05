@@ -1,11 +1,20 @@
-// lib/features/learning/presentation/pages/home_page_widgets.dart
+
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:kids/features/animals/presentation/pages/animals_page.dart';
 import 'package:kids/features/colors/presentation/pages/colors_page.dart';
+import 'package:kids/features/drawing/presentation/pages/drawing_page.dart';
+import 'package:kids/features/fruits/presentation/pages/fruits_page.dart';
+import 'package:kids/features/gk/presentation/pages/gk_page.dart';
+import 'package:kids/features/mascot/presentation/pages/dressing_room_page.dart';
+import 'package:kids/features/mascot/presentation/provider/mascot_provider.dart';
+import 'package:kids/features/puzzles/presentation/pages/puzzles_page.dart';
+import 'package:kids/features/quiz/presentation/pages/quiz_selection_page.dart';
 import 'package:kids/features/rhymes/presentation/pages/rhymes_page.dart';
 import 'package:kids/features/shapes/presentation/pages/shapes_page.dart';
 import 'package:kids/features/stories/presentation/pages/stories_page.dart';
 import 'package:kids/features/rewards/presentation/provider/rewards_provider.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'alphabet_page.dart';
 import 'numbers_page.dart';
@@ -20,179 +29,227 @@ class CartoonBackground extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF81C7F5), Color(0xFFB3E5FC)], // Sky Blue Gradient
+          colors: [Color(0xFF6A82FB), Color(0xFFFC5286)],
         ),
       ),
       child: Stack(
         children: [
-          // Floating clouds
-          _buildCloud(top: 100, left: -50, size: 150),
-          _buildCloud(top: 250, right: -60, size: 120),
-          _buildCloud(top: 400, left: 20, size: 80),
-          _buildCloud(bottom: 100, right: 20, size: 100),
+          // Stars
+          for (int i = 0; i < 10; i++)
+            Positioned(
+              top: Random().nextDouble() * 300,
+              left: Random().nextDouble() * MediaQuery.of(context).size.width,
+              child: const Icon(Icons.star, color: Colors.yellow, size: 15),
+            ),
+          // Rainbow
+          Positioned(
+            top: 50,
+            right: -100,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    Colors.red.withOpacity(0.5),
+                    Colors.orange.withOpacity(0.5),
+                    Colors.yellow.withOpacity(0.5),
+                    Colors.green.withOpacity(0.5),
+                    Colors.blue.withOpacity(0.5),
+                    Colors.indigo.withOpacity(0.5),
+                    Colors.purple.withOpacity(0.5),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Floating Islands
+          Positioned(
+            bottom: 150,
+            left: 50,
+            child: _buildFloatingIsland(),
+          ),
+          Positioned(
+            bottom: 250,
+            right: 30,
+            child: _buildFloatingIsland(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCloud({double? top, double? bottom, double? left, double? right, required double size}) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: Icon(
-        Icons.cloud,
-        color: Colors.white.withOpacity(0.5),
-        size: size,
+  Widget _buildFloatingIsland() {
+    return Container(
+      width: 100,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.brown.shade300,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
     );
   }
 }
 
-class CartoonMascot extends StatelessWidget {
-  final double size;
-  const CartoonMascot({super.key, required this.size});
+class FeatureCarousel extends StatelessWidget {
+  const FeatureCarousel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: const Icon(
-        Icons.face, // Placeholder for a cute mascot
-        color: Colors.orangeAccent,
-        size: 100,
+    // A list of all features to be displayed in the grid.
+    final features = [
+      _FeatureData('Alphabet', Icons.abc, Colors.red, () => Navigator.pushNamed(context, AlphabetPage.routeName)),
+      _FeatureData('Numbers', Icons.format_list_numbered, Colors.orange, () => Navigator.pushNamed(context, NumbersPage.routeName)),
+      _FeatureData('Rhymes', Icons.music_note, Colors.purple, () => Navigator.pushNamed(context, RhymesPage.routeName)),
+      _FeatureData('Drawing', Icons.brush, Colors.blue, () => Navigator.pushNamed(context, DrawingPage.routeName)),
+      _FeatureData('Coloring', Icons.palette, Colors.pink, () => Navigator.pushNamed(context, ColorsPage.routeName)),
+      _FeatureData('Shapes', Icons.category, Colors.green, () => Navigator.pushNamed(context, ShapesPage.routeName)),
+      _FeatureData('Animals', Icons.pets, Colors.brown, () => Navigator.pushNamed(context, AnimalsPage.routeName)),
+      _FeatureData('Fruits', Icons.apple, Colors.redAccent, () => Navigator.pushNamed(context, FruitsPage.routeName)),
+      _FeatureData('Stories', Icons.book, Colors.teal, () => Navigator.pushNamed(context, StoriesPage.routeName)),
+      _FeatureData('Games', Icons.games, Colors.amber, () => Navigator.pushNamed(context, QuizSelectionPage.routeName)),
+      _FeatureData('Puzzles', Icons.extension, Colors.deepOrange, () => Navigator.pushNamed(context, PuzzlesPage.routeName)),
+      _FeatureData('Quiz', Icons.question_answer, Colors.cyan, () => Navigator.pushNamed(context, QuizSelectionPage.routeName)),
+      _FeatureData('GK', Icons.lightbulb, Colors.indigo, () => Navigator.pushNamed(context, GKPage.routeName)),
+    ];
+
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 20,
+        mainAxisSpacing: 20,
+        childAspectRatio: 0.9,
       ),
+      itemCount: features.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        final feature = features[index];
+        return AnimatedFeatureIcon(
+          label: feature.label,
+          icon: feature.icon,
+          color: feature.color,
+          onTap: feature.onTap,
+        );
+      },
     );
   }
 }
 
-class WelcomeMessage extends StatelessWidget {
-  const WelcomeMessage({super.key});
+// A simple data class for feature properties.
+class _FeatureData {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  _FeatureData(this.label, this.icon, this.color, this.onTap);
+}
+
+// The new animated feature icon with a bouncy effect on tap.
+class AnimatedFeatureIcon extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const AnimatedFeatureIcon({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<AnimatedFeatureIcon> createState() => _AnimatedFeatureIconState();
+}
+
+class _AnimatedFeatureIconState extends State<AnimatedFeatureIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _animation = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          "Hello, Friend!",
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                color: Colors.black.withOpacity(0.2),
-                offset: const Offset(2, 2),
-                blurRadius: 4,
+    return ScaleTransition(
+      scale: _animation,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.color,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withOpacity(0.5),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+              // Inner shadow for 3D effect
+              BoxShadow(
+                color: Colors.white.withOpacity(0.3),
+                blurRadius: 1,
+                spreadRadius: 1,
+                offset: const Offset(-1, -1),
+              ),
+            ],
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(widget.icon, size: 40, color: Colors.white),
+              const SizedBox(height: 8),
+              Text(
+                widget.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          "What will we learn today?",
-          style: TextStyle(
-            fontSize: 20,
-            color: Colors.white.withOpacity(0.9),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class BubblyBottomPanel extends StatelessWidget {
-  final Widget child;
-  const BubblyBottomPanel({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        height: size.height * 0.55,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF6AE398), Color(0xFF50C878)], // Grassy Green Gradient
-          ),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              offset: Offset(0, -10),
-              blurRadius: 20,
-            ),
-          ],
-        ),
-        child: child,
       ),
     );
   }
 }
 
-class LearningWorldsGrid extends StatelessWidget {
-  const LearningWorldsGrid({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 3,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      children: [
-        HomeFeatureBubble(
-          label: "Alphabet",
-          icon: Icons.abc, // Corrected Icon
-          startColor: const Color(0xFFFF7B9C),
-          endColor: const Color(0xFFFF5F6D),
-          onTap: () => Navigator.pushNamed(context, AlphabetPage.routeName),
-        ),
-        HomeFeatureBubble(
-          label: "Numbers",
-          icon: Icons.format_list_numbered,
-          startColor: const Color(0xFF6FD6FF),
-          endColor: const Color(0xFF4DA6FF),
-          onTap: () => Navigator.pushNamed(context, NumbersPage.routeName),
-        ),
-        HomeFeatureBubble(
-          label: "Colors",
-          icon: Icons.palette,
-          startColor: const Color(0xFF9B88FF),
-          endColor: const Color(0xFF7F5CFF),
-          onTap: () => Navigator.pushNamed(context, ColorsPage.routeName),
-        ),
-        HomeFeatureBubble(
-          label: "Shapes",
-          icon: Icons.category,
-          startColor: const Color(0xFFFFC94F),
-          endColor: const Color(0xFFFFA726),
-          onTap: () => Navigator.pushNamed(context, ShapesPage.routeName),
-        ),
-        HomeFeatureBubble(
-          label: "Rhymes",
-          icon: Icons.music_note,
-          startColor: const Color(0xFF80E27E),
-          endColor: const Color(0xFF4CAF50),
-          onTap: () => Navigator.pushNamed(context, RhymesPage.routeName),
-        ),
-        HomeFeatureBubble(
-          label: "Stories",
-          icon: Icons.menu_book,
-          startColor: const Color(0xFFFF8A65),
-          endColor: const Color(0xFFF4511E),
-          onTap: () => Navigator.pushNamed(context, StoriesPage.routeName),
-        ),
-      ],
-    );
-  }
-}
 
 class StarCounter extends StatelessWidget {
   const StarCounter({super.key});
@@ -205,13 +262,7 @@ class StarCounter extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            offset: const Offset(0, 4),
-            blurRadius: 8,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), offset: const Offset(0, 4), blurRadius: 8)],
       ),
       child: Row(
         children: [
@@ -236,103 +287,11 @@ class SettingsButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            offset: const Offset(0, 4),
-            blurRadius: 8,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), offset: const Offset(0, 4), blurRadius: 8)],
       ),
       child: const Padding(
         padding: EdgeInsets.all(12.0),
         child: Icon(Icons.settings, color: Colors.grey, size: 28),
-      ),
-    );
-  }
-}
-
-class HomeFeatureBubble extends StatefulWidget {
-  final String label;
-  final IconData icon;
-  final Color startColor;
-  final Color endColor;
-  final VoidCallback onTap;
-
-  const HomeFeatureBubble({
-    super.key,
-    required this.label,
-    required this.icon,
-    required this.startColor,
-    required this.endColor,
-    required this.onTap,
-  });
-
-  @override
-  State<HomeFeatureBubble> createState() => _HomeFeatureBubbleState();
-}
-
-class _HomeFeatureBubbleState extends State<HomeFeatureBubble> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _animation = Tween<double>(begin: 1.0, end: 0.95).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _animation,
-      child: GestureDetector(
-        onTapDown: (_) => _controller.forward(),
-        onTapUp: (_) => _controller.reverse(),
-        onTapCancel: () => _controller.reverse(),
-        onTap: widget.onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [widget.startColor, widget.endColor],
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                offset: const Offset(0, 10),
-                blurRadius: 20,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(widget.icon, size: 40, color: Colors.white),
-              const SizedBox(height: 8),
-              Text(
-                widget.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

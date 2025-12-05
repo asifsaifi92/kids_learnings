@@ -1,4 +1,5 @@
 // lib/features/rhymes/data/models/rhyme_model.dart
+// This file is being forcefully overwritten to resolve a persistent build error.
 
 import '../../domain/entities/rhyme_item.dart';
 
@@ -6,14 +7,12 @@ class RhymeModel extends RhymeItem {
   RhymeModel({
     required String id,
     required String title,
-    required String durationText,
-    required String assetPath,
-    required String ttsIntro,
+    required String lyrics,
+    required String ttsText,
   }) : super(
           id: id,
           title: title,
-          durationText: durationText,
-          assetPath: assetPath,
-          ttsIntro: ttsIntro,
+          lyrics: lyrics,
+          ttsText: ttsText,
         );
 }

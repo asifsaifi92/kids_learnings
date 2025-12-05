@@ -5,7 +5,14 @@ import 'package:flutter/material.dart';
 class ColorBubble extends StatelessWidget {
   final String label;
   final String colorHex;
-  const ColorBubble({super.key, required this.label, required this.colorHex});
+  final bool isLearned;
+
+  const ColorBubble({
+    super.key,
+    required this.label,
+    required this.colorHex,
+    this.isLearned = false, // Default to not learned
+  });
 
   Color _parseHex(String hex) {
     final h = hex.replaceAll('#', '');
@@ -30,11 +37,12 @@ class ColorBubble extends StatelessWidget {
             gradient: LinearGradient(colors: [Colors.white.withOpacity(0.18), Colors.white.withOpacity(0.02)], begin: Alignment.topLeft, end: Alignment.bottomRight),
           ),
           child: Center(
-            child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: isLearned
+                ? const Icon(Icons.check_circle, color: Colors.white, size: 36) // Show checkmark if learned
+                : Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ),
       ),
     );
   }
 }
-

@@ -5,72 +5,51 @@ import '../../domain/entities/rhyme_item.dart';
 
 class RhymeCard extends StatelessWidget {
   final RhymeItem rhyme;
-  final VoidCallback onPlay;
+  final VoidCallback onTap;
 
-  const RhymeCard({super.key, required this.rhyme, required this.onPlay});
+  const RhymeCard({super.key, required this.rhyme, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.lightBlue.shade100],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(4, 4),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF81C7F5), Color(0xFFB3E5FC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
                 rhyme.title,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Duration: ${rhyme.durationText}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
-              ),
-            ],
-          ),
-          GestureDetector(
-            onTap: onPlay,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.pinkAccent,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.pink.withOpacity(0.5),
-                    blurRadius: 10,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
             ),
-          ),
-        ],
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white,
+              size: 24,
+            ),
+          ],
+        ),
       ),
     );
   }

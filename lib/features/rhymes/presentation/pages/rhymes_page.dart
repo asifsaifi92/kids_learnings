@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/rhymes_provider.dart';
+import 'rhyme_detail_page.dart';
 import '../widgets/rhyme_card.dart';
-import '../widgets/mini_player.dart';
 
 class RhymesPage extends StatefulWidget {
   const RhymesPage({super.key});
@@ -31,13 +31,14 @@ class _RhymesPageState extends State<RhymesPage> {
   @override
   Widget build(BuildContext context) {
     final prov = Provider.of<RhymesProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nursery Rhymes'),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.orange, Colors.pinkAccent],
+              colors: [Color(0xFF81C7F5), Color(0xFFB3E5FC)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -47,42 +48,33 @@ class _RhymesPageState extends State<RhymesPage> {
       body: prov.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade50, Colors.pink.shade50],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF6AE398), Color(0xFF50C878)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(24.0),
-                      itemCount: prov.items.length,
-                      itemBuilder: (context, index) {
-                        final item = prov.items[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 24.0),
-                          child: RhymeCard(rhyme: item, onPlay: () => prov.play(item)),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(24.0),
+                itemCount: prov.items.length,
+                itemBuilder: (context, index) {
+                  final item = prov.items[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: RhymeCard(
+                      rhyme: item,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RhymeDetailPage(rhyme: item),
+                          ),
                         );
                       },
                     ),
-                  ),
-                  if (prov.currentlyPlaying != null)
-                    MiniPlayer(
-                      rhyme: prov.currentlyPlaying!,
-                      isPlaying: prov.isPlaying,
-                      onPlayPause: () {
-                        if (prov.isPlaying) {
-                          prov.pause();
-                        } else {
-                          prov.resume();
-                        }
-                      },
-                      onStop: () => prov.stop(),
-                    ),
-                ],
+                  );
+                },
               ),
             ),
     );
