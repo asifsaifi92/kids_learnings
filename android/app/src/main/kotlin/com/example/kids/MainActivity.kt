@@ -1,4 +1,4 @@
-package com.example.kids
+package com.genai.kids
 
 import io.flutter.embedding.android.FlutterActivity
 
