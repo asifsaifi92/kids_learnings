@@ -1,19 +1,28 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:kids/core/services/notification_service.dart';
 import 'package:kids/features/animals/presentation/pages/animals_page.dart';
 import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
 import 'package:kids/features/drawing/presentation/pages/drawing_page.dart';
 import 'package:kids/features/fruits/presentation/pages/fruits_page.dart';
 import 'package:kids/features/gk/presentation/pages/gk_page.dart';
+import 'package:kids/features/learning/presentation/pages/spelling_page.dart';
 import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
 import 'package:kids/features/mascot/presentation/provider/mascot_provider.dart';
 import 'package:kids/features/mascot/presentation/pages/dressing_room_page.dart';
+import 'package:kids/features/mascot/presentation/pages/feeding_room_page.dart';
+import 'package:kids/features/parent_settings/presentation/pages/create_profile_page.dart';
 import 'package:kids/features/parent_settings/presentation/pages/parent_settings_page.dart';
 import 'package:kids/features/parent_settings/presentation/provider/parent_settings_provider.dart';
+import 'package:kids/features/parent_settings/presentation/provider/profile_provider.dart';
 import 'package:kids/features/puzzles/presentation/pages/puzzles_page.dart';
 import 'package:kids/features/quiz/presentation/pages/quiz_page.dart';
 import 'package:kids/features/quiz/presentation/pages/quiz_selection_page.dart';
 import 'package:kids/features/quiz/presentation/provider/quiz_provider.dart';
+import 'package:kids/features/rewards/presentation/pages/sticker_album_page.dart';
+import 'package:kids/features/rewards/presentation/pages/trophy_room_page.dart';
+import 'package:kids/features/rewards/presentation/provider/achievements_provider.dart';
 import 'package:kids/features/rewards/presentation/provider/rewards_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/learning/presentation/pages/alphabet_page.dart';
@@ -29,9 +38,16 @@ import 'package:kids/features/shapes/presentation/provider/shapes_provider.dart'
 import 'package:kids/features/rhymes/presentation/provider/rhymes_provider.dart';
 import 'package:kids/features/stories/presentation/provider/stories_provider.dart';
 import 'injection_container.dart' as di;
+import 'splash_screen.dart'; // Import SplashScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Notifications
+  await NotificationService().init();
+  await NotificationService().requestPermissions();
+  await NotificationService().scheduleDailyRewardReminder();
+
   await di.initDependencies();
   runApp(const KidsLearningApp());
 }
@@ -73,14 +89,17 @@ class KidsLearningApp extends StatelessWidget {
         }),
         ChangeNotifierProvider(create: (_) => di.sl<RewardsProvider>()..load()),
         ChangeNotifierProvider(create: (_) => di.sl<ParentSettingsProvider>()..load()),
+        ChangeNotifierProvider(create: (_) => AchievementsProvider()..init()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()..load()),
       ],
       child: MaterialApp(
         title: 'Kids Learning',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
-        initialRoute: HomePage.routeName,
+        // Use SplashScreen as the home screen
+        home: const SplashScreen(), 
         routes: {
-          HomePage.routeName: (_) => const HomePage(),
+          CreateProfilePage.routeName: (_) => const CreateProfilePage(),
           AlphabetPage.routeName: (_) => const AlphabetPage(),
           NumbersPage.routeName: (_) => const NumbersPage(),
           ColorsPage.routeName: (_) => const ColorsPage(),
@@ -90,14 +109,35 @@ class KidsLearningApp extends StatelessWidget {
           ParentSettingsPage.routeName: (_) => const ParentSettingsPage(),
           DrawingPage.routeName: (_) => const DrawingPage(),
           DressingRoomPage.routeName: (_) => const DressingRoomPage(),
+          FeedingRoomPage.routeName: (_) => const FeedingRoomPage(),
+          StickerAlbumPage.routeName: (_) => const StickerAlbumPage(),
+          TrophyRoomPage.routeName: (_) => const TrophyRoomPage(),
           QuizSelectionPage.routeName: (_) => const QuizSelectionPage(),
           QuizPage.routeName: (_) => const QuizPage(),
           AnimalsPage.routeName: (_) => const AnimalsPage(),
           FruitsPage.routeName: (_) => const FruitsPage(),
           PuzzlesPage.routeName: (_) => const PuzzlesPage(),
           GKPage.routeName: (_) => const GKPage(),
+          SpellingPage.routeName: (_) => const SpellingPage(),
         },
       ),
+    );
+  }
+}
+
+class RootDispatcher extends StatelessWidget {
+  const RootDispatcher({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ProfileProvider>(
+      builder: (context, profile, _) {
+        if (profile.hasProfile) {
+          return const HomePage();
+        } else {
+          return const CreateProfilePage();
+        }
+      },
     );
   }
 }

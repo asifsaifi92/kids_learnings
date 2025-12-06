@@ -1,19 +1,18 @@
 // lib/core/audio/audio_player_service.dart
 
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class AudioPlayerService {
   final AudioPlayer _player = AudioPlayer();
 
-  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<PlayerState> get playerStateStream => _player.onPlayerStateChanged;
 
-  bool get isPlaying => _player.playing;
+  bool get isPlaying => _player.state == PlayerState.playing;
 
   /// Attempts to play an asset. Returns true on success, false on failure.
   Future<bool> playAsset(String assetPath) async {
     try {
-      await _player.setAsset(assetPath);
-      _player.play();
+      await _player.play(AssetSource(assetPath));
       return true;
     } catch (e) {
       // Log the error so the caller can decide how to handle it
@@ -26,8 +25,7 @@ class AudioPlayerService {
   /// Play a remote URL. Returns true on success, false on failure.
   Future<bool> playUrl(String url) async {
     try {
-      await _player.setUrl(url);
-      _player.play();
+      await _player.play(UrlSource(url));
       return true;
     } catch (e) {
       // ignore: avoid_print
@@ -41,7 +39,7 @@ class AudioPlayerService {
   }
 
   Future<void> resume() async {
-    await _player.play();
+    await _player.resume();
   }
 
   Future<void> stop() async {

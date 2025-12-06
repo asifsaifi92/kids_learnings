@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import '../provider/colors_provider.dart';
 import 'package:kids/features/colors/presentation/widgets/color_bubble.dart' as cbw;
 import 'package:kids/features/colors/domain/entities/color_item.dart';
-import '../../../rewards/presentation/provider/rewards_provider.dart';
-import '../../../rewards/presentation/widgets/reward_popup.dart';
+import 'package:kids/features/rewards/presentation/provider/rewards_provider.dart';
+import 'package:kids/features/rewards/presentation/widgets/reward_popup.dart'; // Changed to absolute import
 
 class ColorsPage extends StatefulWidget {
   const ColorsPage({super.key});
@@ -100,26 +100,85 @@ class _ColorsPageState extends State<ColorsPage> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // Top Controls Area
                 Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(onPressed: _startGame, child: const Text('Play: Find Color')),
-                      if (_gameActive) Row(children: [
-                        const Icon(Icons.flag, color: Colors.black54, size: 18),
-                        const SizedBox(width: 8),
-                        Text(_gameMessage, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ]),
-                    ],
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text('Play: Find Color'),
+                      onPressed: _startGame,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        textStyle: const TextStyle(fontSize: 18),
+                        backgroundColor: Colors.indigo.shade50,
+                        foregroundColor: Colors.indigo,
+                      ),
+                    ),
                   ),
                 ),
+                
+                // Game Instruction Banner
+                if (_gameActive)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.amber.shade800, width: 2),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.flag, color: Colors.deepOrange, size: 30),
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Text(
+                            _gameMessage,
+                            style: TextStyle(
+                              fontSize: 22, 
+                              fontWeight: FontWeight.bold,
+                              color: Colors.brown.shade800
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Success/Failure Message
+                if (!_gameActive && _gameMessage.isNotEmpty)
+                  Container(
+                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                     padding: const EdgeInsets.all(12),
+                     decoration: BoxDecoration(
+                       color: _gameMessage.startsWith('Yay') ? Colors.green.shade100 : Colors.red.shade100,
+                       borderRadius: BorderRadius.circular(12),
+                       border: Border.all(
+                         color: _gameMessage.startsWith('Yay') ? Colors.green : Colors.red,
+                         width: 1
+                       ),
+                     ),
+                     child: Text(
+                       _gameMessage, 
+                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                       textAlign: TextAlign.center,
+                     ),
+                  ),
+
+                // Color Grid
                 Expanded(
                   child: GridView.count(
                     crossAxisCount: 3,
                     padding: const EdgeInsets.all(16),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
                     children: colorsProvider.items
                         .map((c) => GestureDetector(
                               onTap: () => _onColorTap(c),
@@ -132,11 +191,6 @@ class _ColorsPageState extends State<ColorsPage> {
                         .toList(),
                   ),
                 ),
-                if (!_gameActive && _gameMessage.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(_gameMessage, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
               ],
             ),
     );

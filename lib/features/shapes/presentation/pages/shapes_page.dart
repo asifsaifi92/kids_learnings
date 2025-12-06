@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
 import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
+import 'package:kids/features/shapes/presentation/pages/shape_builder_page.dart';
 import 'package:provider/provider.dart';
 import '../provider/shapes_provider.dart';
 import '../widgets/shape_tile.dart';
@@ -133,16 +134,32 @@ class _ShapesPageState extends State<ShapesPage> with TickerProviderStateMixin {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: _startGame,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pinkAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _startGame,
+                          icon: const Icon(Icons.search),
+                          label: const Text('Find It!'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.pinkAccent,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          ),
                         ),
-                      ),
-                      child: const Text('Play a Game!', style: TextStyle(fontSize: 18)),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const ShapeBuilderPage()));
+                          },
+                          icon: const Icon(Icons.construction),
+                          label: const Text('Build It!'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orangeAccent,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (_gameMessage.isNotEmpty)

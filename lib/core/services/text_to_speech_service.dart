@@ -1,4 +1,5 @@
 // lib/core/services/text_to_speech_service.dart
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -7,25 +8,38 @@ class TextToSpeechService {
 
   Future<void> init() async {
     await _flutterTts.setLanguage("en-IN");
-    await _flutterTts.setSpeechRate(0.45); // Kid-friendly slower pace
-    await _flutterTts.setPitch(1.0); // Normal pitch
+    await _flutterTts.setSpeechRate(0.45);
+    await _flutterTts.setPitch(1.0);
+    
+    // Ensure iOS plays in silent mode too
+    if (Platform.isIOS) {
+      await _flutterTts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback,
+          [IosTextToSpeechAudioCategoryOptions.defaultToSpeaker]);
+    }
   }
 
   Future<void> speak(String text) async {
     try {
-      // Avoid forcing a stop() before every speak to prevent platform-specific issues.
-      // Just call speak; FlutterTts will handle queuing or interrupting as needed.
-      // ignore: avoid_print
+      // Force stop before speaking new text to prevent queue buildup
+      await _flutterTts.stop(); 
       print('[TextToSpeechService] speak: "$text"');
       await _flutterTts.speak(text);
     } catch (e) {
-      // ignore: avoid_print
       print('[TextToSpeechService] speak error: $e');
     }
   }
 
   Future<void> stop() async {
-    await _flutterTts.stop();
+    try {
+      await _flutterTts.stop();
+      if (Platform.isAndroid) {
+        // Android Hack: Speak empty string to flush queue if stop() fails
+        await _flutterTts.speak(""); 
+        await _flutterTts.stop(); // Stop again to be sure
+      }
+    } catch (e) {
+      print('[TextToSpeechService] stop error: $e');
+    }
   }
 
   /// Speaks the given [chunks] sequentially. Calls [onChunkStart] with the

@@ -1,4 +1,3 @@
-// lib/features/parent_settings/presentation/pages/parent_settings_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:kids/features/colors/presentation/provider/colors_provider.dart';
@@ -8,6 +7,7 @@ import 'package:kids/features/rewards/presentation/provider/rewards_provider.dar
 import 'package:kids/features/rhymes/presentation/provider/rhymes_provider.dart';
 import 'package:kids/features/shapes/presentation/provider/shapes_provider.dart';
 import 'package:kids/features/stories/presentation/provider/stories_provider.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,7 +46,7 @@ class _ParentSettingsPageState extends State<ParentSettingsPage> {
   Future<void> _showResetConfirmationDialog() async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Reset All Progress?'),
@@ -80,11 +80,9 @@ class _ParentSettingsPageState extends State<ParentSettingsPage> {
   }
 
   Future<void> _resetAllProgress() async {
-    // A more robust way to clear all app-specific data
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
 
-    // Reload all providers to update the UI
     context.read<LearningProvider>().init();
     context.read<RhymesProvider>().init();
     context.read<StoriesProvider>().init();
@@ -102,208 +100,243 @@ class _ParentSettingsPageState extends State<ParentSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final settingsProv = Provider.of<ParentSettingsProvider>(context);
+    
     final learningProv = Provider.of<LearningProvider>(context);
     final rhymesProv = Provider.of<RhymesProvider>(context);
     final storiesProv = Provider.of<StoriesProvider>(context);
     final colorsProv = Provider.of<ColorsProvider>(context);
     final shapesProv = Provider.of<ShapesProvider>(context);
+    final rewardsProv = Provider.of<RewardsProvider>(context);
 
-    // Helper to prevent division by zero
-    double safeDivide(int a, int b) => (b == 0) ? 0.0 : a / b;
+    // Calculate aggregated stats
+    final int totalLearned = learningProv.completedAlphabets.length +
+        learningProv.completedNumbers.length +
+        learningProv.completedColors.length +
+        learningProv.completedShapes.length +
+        rhymesProv.completedRhymes.length +
+        storiesProv.completedStories.length;
+
+    final int totalItems = 26 + 10 + colorsProv.items.length + shapesProv.items.length + rhymesProv.items.length + storiesProv.items.length;
+    
+    // SAFE DIVISION with CLAMP
+    final double overallProgress = (totalItems == 0) ? 0.0 : (totalLearned / totalItems).clamp(0.0, 1.0);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Parent Dashboard'),
+        backgroundColor: Colors.blueGrey,
       ),
+      backgroundColor: Colors.grey.shade100,
       body: settingsProv.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-        padding: const EdgeInsets.all(24.0),
-        children: [
-          _buildSettingsCard(
-            context,
-            title: 'Learning Progress Report',
-            children: [
-              _buildProgressExpansionTile(
-                context: context,
-                title: 'Alphabets',
-                percent: safeDivide(learningProv.completedAlphabets.length, 26),
-                progressText: '${learningProv.completedAlphabets.length} / 26',
-                completedItems: learningProv.completedAlphabets.toList()..sort(),
-                color: Colors.redAccent,
-              ),
-              _buildProgressExpansionTile(
-                context: context,
-                title: 'Numbers',
-                percent: safeDivide(learningProv.completedNumbers.length, 10),
-                progressText: '${learningProv.completedNumbers.length} / 10',
-                completedItems: learningProv.completedNumbers.toList()..sort(),
-                color: Colors.blueAccent,
-              ),
-              _buildProgressExpansionTile(
-                context: context,
-                title: 'Colors',
-                percent: safeDivide(learningProv.completedColors.length, colorsProv.items.length),
-                progressText: '${learningProv.completedColors.length} / ${colorsProv.items.length}',
-                completedItems: learningProv.completedColors.toList()..sort(),
-                color: Colors.purpleAccent,
-              ),
-              _buildProgressExpansionTile(
-                context: context,
-                title: 'Shapes',
-                percent: safeDivide(learningProv.completedShapes.length, shapesProv.items.length),
-                progressText: '${learningProv.completedShapes.length} / ${shapesProv.items.length}',
-                completedItems: learningProv.completedShapes.toList()..sort(),
-                color: Colors.orangeAccent,
-              ),
-              _buildProgressExpansionTile(
-                context: context,
-                title: 'Rhymes',
-                percent: safeDivide(rhymesProv.completedRhymes.length, rhymesProv.items.length),
-                progressText: '${rhymesProv.completedRhymes.length} / ${rhymesProv.items.length}',
-                completedItems: rhymesProv.completedRhymes.toList()..sort(),
-                color: Colors.green,
-              ),
-              _buildProgressExpansionTile(
-                context: context,
-                title: 'Stories',
-                percent: safeDivide(storiesProv.completedStories.length, storiesProv.items.length),
-                progressText: '${storiesProv.completedStories.length} / ${storiesProv.items.length}',
-                completedItems: storiesProv.completedStories.toList()..sort(),
-                color: Colors.teal,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildSettingsCard(
-            context,
-            title: 'Sound & Voice',
-            children: [
-              SwitchListTile(
-                title: const Text('Background Music'),
-                value: settingsProv.settings.isMusicEnabled,
-                onChanged: (value) => settingsProv.updateMusic(value),
-              ),
-              ListTile(
-                title: const Text('Voice Speed'),
-                trailing: DropdownButton<double>(
-                  value: settingsProv.settings.voiceSpeed,
-                  items: const [
-                    DropdownMenuItem(value: 0.5, child: Text('Slow')),
-                    DropdownMenuItem(value: 1.0, child: Text('Medium')),
-                    DropdownMenuItem(value: 1.5, child: Text('Fast')),
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                // 1. Overall Summary Card
+                _buildSummaryCard(overallProgress, totalLearned, rewardsProv.rewardState.totalStars),
+                const SizedBox(height: 20),
+
+                const Text(
+                  'Learning Breakdown',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                ),
+                const SizedBox(height: 10),
+
+                // 2. Detailed Breakdown Grid
+                _buildBreakdownGrid(
+                  learningProv, rhymesProv, storiesProv, colorsProv, shapesProv
+                ),
+                
+                const SizedBox(height: 30),
+                const Text(
+                  'App Settings',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                ),
+                const SizedBox(height: 10),
+
+                // 3. Settings Section
+                _buildSettingsCard(
+                  context,
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Background Music'),
+                      secondary: const Icon(Icons.music_note),
+                      value: settingsProv.settings.isMusicEnabled,
+                      onChanged: (value) => settingsProv.updateMusic(value),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      title: const Text('Voice Speed'),
+                      leading: const Icon(Icons.speed),
+                      trailing: DropdownButton<double>(
+                        value: settingsProv.settings.voiceSpeed,
+                        underline: Container(),
+                        items: const [
+                          DropdownMenuItem(value: 0.5, child: Text('Slow')),
+                          DropdownMenuItem(value: 1.0, child: Text('Normal')),
+                          DropdownMenuItem(value: 1.5, child: Text('Fast')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            settingsProv.updateVoiceSpeed(value);
+                          }
+                        },
+                      ),
+                    ),
                   ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      settingsProv.updateVoiceSpeed(value);
-                    }
-                  },
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildSettingsCard(
-            context,
-            title: 'Modules',
-            children: [
-              SwitchListTile(
-                title: const Text('Colors'),
-                value: !settingsProv.settings.disabledModules.contains('colors'),
-                onChanged: (value) => settingsProv.toggleModule('colors', value),
-              ),
-              SwitchListTile(
-                title: const Text('Shapes'),
-                value: !settingsProv.settings.disabledModules.contains('shapes'),
-                onChanged: (value) => settingsProv.toggleModule('shapes', value),
-              ),
-              SwitchListTile(
-                title: const Text('Rhymes'),
-                value: !settingsProv.settings.disabledModules.contains('rhymes'),
-                onChanged: (value) => settingsProv.toggleModule('rhymes', value),
-              ),
-              SwitchListTile(
-                title: const Text('Stories'),
-                value: !settingsProv.settings.disabledModules.contains('stories'),
-                onChanged: (value) => settingsProv.toggleModule('stories', value),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildSettingsCard(
-            context,
-            title: 'Danger Zone',
-            children: [
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-                  onPressed: _showResetConfirmationDialog,
-                  child: const Text('Reset All Progress'),
+                const SizedBox(height: 20),
+                
+                // 4. Danger Zone
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _showResetConfirmationDialog,
+                    icon: const Icon(Icons.delete_forever, color: Colors.red),
+                    label: const Text('Reset All Progress', style: TextStyle(color: Colors.red)),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+                const SizedBox(height: 20),
+              ],
+            ),
     );
   }
 
-  Widget _buildProgressExpansionTile({
-    required BuildContext context,
-    required String title,
-    required double percent,
-    required String progressText,
-    required List<String> completedItems,
-    required Color color,
-  }) {
-    return ExpansionTile(
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 8.0),
-        child: LinearPercentIndicator(
-          percent: percent,
-          lineHeight: 12.0,
-          barRadius: const Radius.circular(6),
-          center: Text(progressText, style: const TextStyle(color: Colors.white, fontSize: 10)),
-          progressColor: color,
-          backgroundColor: color.withOpacity(0.2),
-        ),
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: completedItems.isNotEmpty
-                ? completedItems.map((item) => Chip(label: Text(item))).toList()
-                : [const Text('No items completed yet.')],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingsCard(BuildContext context, {required String title, required List<Widget> children}) {
+  Widget _buildSummaryCard(double progress, int totalLearned, int stars) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(20),
+        child: Row(
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall,
+            CircularPercentIndicator(
+              radius: 50.0,
+              lineWidth: 10.0,
+              percent: progress,
+              center: Text(
+                "${(progress * 100).toInt()}%",
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+              ),
+              progressColor: Colors.green,
+              backgroundColor: Colors.green.shade100,
+              circularStrokeCap: CircularStrokeCap.round,
             ),
-            const Divider(height: 20, thickness: 1),
-            ...children,
+            const SizedBox(width: 24),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Total Mastery",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                  ),
+                  const SizedBox(height: 8),
+                  Text("$totalLearned items learned", style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Text("$stars Stars Earned", style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildBreakdownGrid(
+    LearningProvider learningProv,
+    RhymesProvider rhymesProv,
+    StoriesProvider storiesProv,
+    ColorsProvider colorsProv,
+    ShapesProvider shapesProv,
+  ) {
+    // Helper to prevent division by zero AND clamp
+    double safeDivide(int a, int b) => (b == 0) ? 0.0 : (a / b).clamp(0.0, 1.0);
+
+    final stats = [
+      _StatItem('Alphabets', learningProv.completedAlphabets.length, 26, Colors.redAccent, Icons.abc),
+      _StatItem('Numbers', learningProv.completedNumbers.length, 10, Colors.blueAccent, Icons.looks_one),
+      _StatItem('Colors', learningProv.completedColors.length, colorsProv.items.length, Colors.purpleAccent, Icons.palette),
+      _StatItem('Shapes', learningProv.completedShapes.length, shapesProv.items.length, Colors.orangeAccent, Icons.category),
+      _StatItem('Rhymes', rhymesProv.completedRhymes.length, rhymesProv.items.length, Colors.green, Icons.music_note),
+      _StatItem('Stories', storiesProv.completedStories.length, storiesProv.items.length, Colors.teal, Icons.book),
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.5,
+      ),
+      itemCount: stats.length,
+      itemBuilder: (context, index) {
+        final item = stats[index];
+        final percent = safeDivide(item.current, item.total);
+        
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Icon(item.icon, color: item.color, size: 28),
+                    const SizedBox(width: 8),
+                    Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
+                ),
+                const Spacer(),
+                LinearPercentIndicator(
+                  lineHeight: 8.0,
+                  percent: percent,
+                  progressColor: item.color,
+                  backgroundColor: item.color.withOpacity(0.1),
+                  barRadius: const Radius.circular(4),
+                  padding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${item.current} / ${item.total} Learned',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsCard(BuildContext context, {required List<Widget> children}) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+}
+
+class _StatItem {
+  final String title;
+  final int current;
+  final int total;
+  final Color color;
+  final IconData icon;
+
+  _StatItem(this.title, this.current, this.total, this.color, this.icon);
 }

@@ -18,8 +18,6 @@ class RhymesProvider extends ChangeNotifier {
   Set<String> _completedRhymes = {};
   Set<String> get completedRhymes => _completedRhymes;
 
-  /// Call this during app initialization (or when provider is created) to
-  /// load persisted settings and progress.
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _replayOnResume = prefs.getBool('rhymes_replay_on_resume') ?? _replayOnResume;
@@ -45,7 +43,6 @@ class RhymesProvider extends ChangeNotifier {
     ttsService.speak(text);
   }
 
-  // Playback state for per-word highlighting
   int _currentWordIndex = -1;
   int get currentWordIndex => _currentWordIndex;
 
@@ -55,8 +52,9 @@ class RhymesProvider extends ChangeNotifier {
   bool _isPaused = false;
   bool get isPaused => _isPaused;
 
-  // Configurable resume behavior: when true, resume will replay the last
-  // active word; when false, resume will continue from the next word.
+  RhymeItem? _currentRhyme;
+  RhymeItem? get currentRhyme => _currentRhyme;
+
   bool _replayOnResume = true;
   bool get replayOnResume => _replayOnResume;
   set replayOnResume(bool v) {
@@ -69,10 +67,8 @@ class RhymesProvider extends ChangeNotifier {
   List<Range> _wordRanges = [];
   int _resumeIndex = 0;
 
-  /// Split text into word chunks while preserving punctuation attached to words.
   List<String> _splitToWords(String text) {
     if (text.trim().isEmpty) return [];
-    // Split on whitespace but keep punctuation attached to the word.
     return text.trim().split(RegExp(r"\s+"));
   }
 
@@ -82,7 +78,6 @@ class RhymesProvider extends ChangeNotifier {
     for (var w in words) {
       final start = text.indexOf(w, index);
       if (start == -1) {
-        // fallback: approximate by advancing index
         final approxStart = index;
         final approxEnd = approxStart + w.length;
         ranges.add(Range(approxStart, approxEnd));
@@ -110,41 +105,59 @@ class RhymesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Internal helper to play chunks from [startIndex] sequentially; respects pause/stop flags.
+  /// ROBUST FALLBACK PLAYER
   Future<void> _playChunksFrom(int startIndex, RhymeItem rhyme) async {
     for (var i = startIndex; i < _chunks.length; i++) {
+      // Check state BEFORE starting word
       if (!_isPlaying || _isPaused) {
-        return; // stop or pause requested
+        return; 
       }
-      // ensure resume index points to the currently about-to-play word
-      // If replayOnResume is enabled, resume should start at this same word;
-      // otherwise set resume to the next word.
+      
       _resumeIndex = _replayOnResume ? i : (i + 1);
       _currentWordIndex = i;
       notifyListeners();
+      
+      final word = _chunks[i];
+      
       try {
-        await ttsService.speak(_chunks[i]);
-        // small gap to allow distinct words
-        await Future.delayed(const Duration(milliseconds: 80));
+        // Fire TTS
+        ttsService.speak(word);
+        
+        final int durationMs = 300 + (word.length * 60); 
+        
+        // Wait for the duration of the word
+        await Future.delayed(Duration(milliseconds: durationMs));
+        
+        // CHECK AGAIN AFTER DELAY
+        // This is crucial. If stop() was called during the delay, we must abort immediately.
+        if (!_isPlaying || _isPaused) {
+          // If we stopped, ensure TTS is actually silent
+          await ttsService.stop();
+          return;
+        }
+
+        // Small pause between words
+        await Future.delayed(const Duration(milliseconds: 50));
+        
       } catch (_) {
-        // swallow errors and continue
+        await Future.delayed(const Duration(milliseconds: 100));
       }
     }
-    // finished
+    
+    // Finished normally
     _isPlaying = false;
     _currentWordIndex = -1;
     await _markRhymeAsCompleted(rhyme);
     notifyListeners();
   }
 
-  /// Play the given rhyme's ttsText and update [currentWordIndex] as chunks
-  /// are started. Uses the TextToSpeechService.speakWithProgress for smooth
-  /// highlighting and falls back to inline chunk playback which supports
-  /// pause/resume.
   Future<void> playRhyme(RhymeItem rhyme) async {
     if (rhyme.ttsText.trim().isEmpty) return;
-    await stop(); // ensure previous playback stopped
+    
+    // Ensure clean state before starting
+    await stop(); 
 
+    _currentRhyme = rhyme;
     _chunks = _splitToWords(rhyme.ttsText);
     _wordRanges = _computeWordRanges(rhyme.ttsText, _chunks);
     _currentWordIndex = -1;
@@ -153,47 +166,21 @@ class RhymesProvider extends ChangeNotifier {
     _resumeIndex = 0;
     notifyListeners();
 
-    try {
-      await ttsService.speakWithProgress(
-        rhyme.ttsText,
-        onCharIndex: (charIndex) {
-          final idx = _findWordIndexForChar(charIndex);
-          if (idx != -1 && idx != _currentWordIndex) {
-            _currentWordIndex = idx;
-            // Set the resume index according to the configured behavior.
-            _resumeIndex = _replayOnResume ? idx : (idx + 1);
-            notifyListeners();
-          }
-        },
-        onComplete: () async {
-          _isPlaying = false;
-          _isPaused = false;
-          _currentWordIndex = -1;
-          _resumeIndex = 0;
-          await _markRhymeAsCompleted(rhyme);
-          notifyListeners();
-        },
-      );
-    } catch (_) {
-      // fallback: play chunks inline so we can pause/resume
-      await _playChunksFrom(0, rhyme);
-    }
+    await _playChunksFrom(0, rhyme);
   }
 
-  /// Pause playback: stop TTS and mark paused; resume will restart from next word.
   Future<void> pause() async {
     if (!_isPlaying || _isPaused) return;
     _isPaused = true;
-    await ttsService.stop();
     notifyListeners();
+    // Immediately kill TTS audio
+    await ttsService.stop();
   }
 
-  /// Resume playback from the last known position.
   Future<void> resume(RhymeItem rhyme) async {
     if (!_isPlaying || !_isPaused) return;
     _isPaused = false;
     notifyListeners();
-    // Continue with chunked playback starting from _resumeIndex
     await _playChunksFrom(_resumeIndex, rhyme);
   }
 
@@ -203,7 +190,24 @@ class RhymesProvider extends ChangeNotifier {
     _currentWordIndex = -1;
     _resumeIndex = 0;
     notifyListeners();
+    // Immediately kill TTS audio
     await ttsService.stop();
+  }
+
+  void playNext() {
+    if (_currentRhyme == null || _items.isEmpty) return;
+    final currentIndex = _items.indexOf(_currentRhyme!);
+    if (currentIndex != -1 && currentIndex < _items.length - 1) {
+      playRhyme(_items[currentIndex + 1]);
+    }
+  }
+
+  void playPrevious() {
+    if (_currentRhyme == null || _items.isEmpty) return;
+    final currentIndex = _items.indexOf(_currentRhyme!);
+    if (currentIndex > 0) {
+      playRhyme(_items[currentIndex - 1]);
+    }
   }
 }
 

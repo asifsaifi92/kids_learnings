@@ -1,6 +1,7 @@
 // lib/features/learning/presentation/pages/numbers_page.dart
 import 'package:flutter/material.dart';
 import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
+import 'package:kids/features/learning/presentation/pages/tracing_page.dart';
 import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/text_to_speech_service.dart';
@@ -44,11 +45,19 @@ class _NumbersPageState extends State<NumbersPage> {
     setState(() {
       _tappedIndex = index;
     });
-    Future.delayed(const Duration(milliseconds: 200), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) {
         setState(() {
           _tappedIndex = null;
         });
+        
+        // Navigate to Tracing Page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TracingPage(character: item.value.toString()),
+          ),
+        );
       }
     });
   }

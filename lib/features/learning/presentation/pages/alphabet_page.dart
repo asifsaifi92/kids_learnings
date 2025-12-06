@@ -1,6 +1,7 @@
 // lib/features/learning/presentation/pages/alphabet_page.dart
 import 'package:flutter/material.dart';
 import 'package:kids/features/challenges/presentation/provider/daily_challenge_provider.dart';
+import 'package:kids/features/learning/presentation/pages/tracing_page.dart';
 import 'package:kids/features/learning/presentation/provider/learning_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/text_to_speech_service.dart';
@@ -32,23 +33,32 @@ class _AlphabetPageState extends State<AlphabetPage> {
     final learningProvider = Provider.of<LearningProvider>(context, listen: false);
     final challengeProvider = Provider.of<DailyChallengeProvider>(context, listen: false);
 
+    // Speak the letter
     _tts.speak(item.ttsText);
 
-    // Only update challenge progress if the letter is being learned for the first time
+    // Track progress
     if (!learningProvider.completedAlphabets.contains(item.letter)) {
       challengeProvider.updateProgress(ChallengeType.LearnLetters);
     }
-    
     learningProvider.markAlphabetAsLearned(item.letter);
 
+    // Animate tap
     setState(() {
       _tappedIndex = index;
     });
-    Future.delayed(const Duration(milliseconds: 200), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) {
         setState(() {
           _tappedIndex = null;
         });
+        
+        // Navigate to Tracing Page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TracingPage(character: item.letter),
+          ),
+        );
       }
     });
   }
