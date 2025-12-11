@@ -86,13 +86,13 @@ flutter:
     - assets/icons/home.svg
     - assets/animations/star_pop.json
     - assets/animations/mascot.json
-    - assets/audio/rhymes/
-    - assets/images/stories/
+    # - assets/audio/rhymes/ # Removed missing directory
+    # - assets/images/stories/ # Removed missing directory
     - assets/images/animals/
-    - assets/sounds/animals/
+    # - assets/sounds/animals/ # Removed missing directory
     - assets/images/fruits/
     - assets/sounds/ui/
-    - assets/images/avatars/
+    # - assets/images/avatars/ # Removed missing directory
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
