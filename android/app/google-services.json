@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "492999714813",
+    "project_id": "kids-learning-cf431",
+    "storage_bucket": "kids-learning-cf431.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492999714813:android:81cbc0853b0177041d1b94",
+        "android_client_info": {
+          "package_name": "com.genai.kids"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBx4cSoEgMTRq_dMt9gW8HMh766yceKcCg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

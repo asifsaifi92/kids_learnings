@@ -1,4 +1,9 @@
 // lib/main.dart
+import 'dart:ui';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kids/core/services/notification_service.dart';
@@ -39,17 +44,37 @@ import 'package:kids/features/rhymes/presentation/provider/rhymes_provider.dart'
 import 'package:kids/features/stories/presentation/provider/stories_provider.dart';
 import 'injection_container.dart' as di;
 import 'splash_screen.dart'; // Import SplashScreen
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
   
   // Initialize Notifications
   await NotificationService().init();
   await NotificationService().requestPermissions();
   await NotificationService().scheduleDailyRewardReminder();
 
+  await _requestPermissions();
+
   await di.initDependencies();
   runApp(const KidsLearningApp());
+}
+
+Future<void> _requestPermissions() async {
+  await [
+    Permission.storage,
+    Permission.photos,
+  ].request();
 }
 
 class KidsLearningApp extends StatelessWidget {
