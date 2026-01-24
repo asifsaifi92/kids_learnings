@@ -5,12 +5,15 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 val keystoreProperties = Properties()
-val keystorePropertiesFile = rootProject.file("key.properties")
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+// Updated to read from the global gradle.properties file in the project root directory
+val globalPropertiesFile = rootProject.file("gradle.properties")
+if (globalPropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(globalPropertiesFile))
 }
 
 android {
@@ -55,6 +58,7 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
 }
 
 flutter {
