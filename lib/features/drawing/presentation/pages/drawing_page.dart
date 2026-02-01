@@ -48,7 +48,7 @@ class _DrawingPageState extends State<DrawingPage> {
     });
     // Preload sound
     _scribblePlayer.setReleaseMode(ReleaseMode.loop);
-    _scribblePlayer.setSource(AssetSource('sounds/ui/pencil.wav'));
+    _scribblePlayer.setSource(AssetSource('sounds/ui/click.wav'));
     _scribblePlayer.setVolume(0.5);
   }
   
